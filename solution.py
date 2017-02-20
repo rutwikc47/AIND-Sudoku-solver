@@ -25,13 +25,26 @@ diag1=list(rows[i]+cols[i] for i in range(len(rows)))
 diag2=list(rows[i]+cols2[i] for i in range(len(rows)))
 
 def assign_value(values, box, value):
+    """
+        Please use this function to update your values dictionary!
+        Assigns a value to a given box. If it updates the board record it.
 
+    """
     values[box] = value
     if len(value) == 1:
         assignments.append(values.copy())
     return values
 
 def grid_values(grid):
+    """
+       Convert grid into a dict of {square: char} with '123456789' for empties.
+       Args:
+           grid(string) - A grid in string form.
+       Returns:
+           A grid in dictionary form
+               Keys: The boxes, e.g., 'A1'
+               Values: The value in each box, e.g., '8'. If the box has no value, then the value will be '123456789'.
+    """
 
     chars = []
     digits = '123456789'
@@ -45,6 +58,11 @@ def grid_values(grid):
     pass
 
 def display(values):
+    """
+        Display the values as a 2-D grid.
+        Args:
+            values(dict): The sudoku in dictionary form
+    """
 
     width = 1+max(len(values[s]) for s in boxes)
     line = '+'.join(['-'*(width*3)]*3)
@@ -55,6 +73,10 @@ def display(values):
     print
 
 def eliminate(values):
+
+    """
+        Reduce the Problem size by eliminating the similar values in every box's peers
+    """
 
     solved_values = [box for box in values.keys() if len(values[box]) == 1]
     for box in solved_values:
@@ -68,14 +90,18 @@ def eliminate(values):
 
     """
 
+    "Get the solved diagonal elements by constraining the search space to values of length 1"
+
     solved_diag1=[diag for diag in diag1 if len(values[diag]) == 1]
     solved_diag2=[diag for diag in diag2 if len(values[diag]) == 1]
+
+    "Remove the values from the Diagonals by constraining the search space to values of length >=2"
 
     if solved_diag1:
         for diag in solved_diag1:
             digit=values[diag]
             for diag in diag1:
-                if len(values[diag])>=2:
+                if len(values[diag])>=2: #Local Constraint
                     values[diag]=values[diag].replace(digit,'')
     if solved_diag2:
         for diag in solved_diag2:
@@ -127,29 +153,35 @@ def search(values):
             return attempt
 
 def naked_twins(values):
+    """Eliminate values using the naked twins strategy.
+        Args:
+            values(dict): a dictionary of the form {'box_name': '123456789', ...}
 
-    """
-
-    Naked Twins:-
-
-    """
-
-    #Get the Naked twins in the sameval list
+        Returns:
+            the values dictionary with the naked twins eliminated from peers.
+        """
+    "Get the Naked twins in the sameval list"
 
     sameval = list()
     for peer, val in peers.items():
         for v in val:
-            if values[peer] == values[v] and len(values[peer]) == 2:
+            if values[peer] == values[v] and len(values[peer]) == 2: #Constraint for getting the values
                 temp = list((peer, v))
                 sameval.append(temp)
 
     diglist = list(x[0] for x in sameval)
 
-    #Get the Peers for the Pair of Naked Twins in the sameval list
+    """
+
+    Get the Peers for the Pair of Naked Twins in the sameval list
+    Here the constraint for getting the peerlist is intersection of peers of naked twins
+
+    """
+
 
     peerlist = list(set(peers[val[0]]) & set(peers[val[1]]) for val in sameval)
 
-    #Remove the Naked twin's value from their peers
+    "Remove the Naked twin's value from their peers obtained in the peerlist"
 
     if sameval:
         count = 0
